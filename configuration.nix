@@ -13,6 +13,8 @@
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelModules = [ "hid-microsoft" ];
 
   nixpkgs.config.allowUnfree = true; 
 
@@ -35,9 +37,15 @@
   #  keyMap = "uk";
     useXkbConfig = true; # use xkb.options in tty.
   };
+  
+  powerManagement.enable = true;
 
   services = {
     power-profiles-daemon.enable = false;
+    thermald.enable = true;
+    tlp = {
+      enable = true;
+    };
     tailscale.enable = true;
     udev.packages = with pkgs ; [gnome.gnome-settings-daemon];
     xserver= {
@@ -76,20 +84,52 @@
     gnomeExtensions.extension-list
     vlc
     vscode
-    tlp
+    gh
+    pavucontrol
+    fish
   ];
+
+  programs.bash = {
+    interactiveShellInit = ''
+      if [[ $(${pkgs.procps}/bin/ps --no-header --pid=$PPID --format=comm) != "fish" && -z ''${BASH_Execution_String} ]]
+      then
+        shopt -q login_shell && LOGIN_OPTION='--login' || LOGIN_OPTION=""
+        exec ${pkgs.fish}/bin/fish $LOGIN_OPTION
+      fi
+    '';
+  };
 
   # Enable CUPS to print documents.
   # services.printing.enable = true;
 
   # Enable sound.
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
-  nixpkgs.config.pulseaudio = true;
-  hardware.enableAllFirmware = true;
+  # sound.enable = true;
+  hardware.pulseaudio.enable = false;
+  # nixpkgs.config.pulseaudio = true;
+  # hardware.enableAllFirmware = true;
+
+  # Try pipewire
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+  }; 
 
   # Enable touchpad support (enabled default in most desktopManager).
-  services.xserver.libinput.enable = true;
+  services.xserver = {
+    libinput = {
+      enable = true;
+      touchpad.tapping = true;
+      touchpad.clickMethod = "buttonareas";
+    };
+    wacom = {
+      enable = true;
+    };
+  };
 
   systemd.services.tailscale-autoconnect = {
     after = ["network-pre.target" "tailscale.service"];
@@ -106,14 +146,14 @@
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  # users.users.alice = {
-  #   isNormalUser = true;
-  #   extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-  #   packages = with pkgs; [
-  #     firefox
-  #     tree
-  #   ];
-  # };
+  users.users.pete = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+  #  packages = with pkgs; [
+  #    firefox
+  #    tree
+  #  ];
+  };
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
