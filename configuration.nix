@@ -55,7 +55,11 @@
       layout = "gb";
       xkbVariant = "";
       desktopManager.gnome.enable = true;
-      excludePackages = (with pkgs; [
+    };
+  };
+  programs.git.enable = true;
+
+  environment.gnome.excludePackages = (with pkgs; [
         xterm
         gnome-tour
       ]) ++ (with pkgs.gnome; [
@@ -69,9 +73,7 @@
         totem
         gnome-contacts
       ]);
-    };
-  };
-  programs.git.enable = true;
+  
 
   environment.systemPackages = with pkgs; [
     firefox
@@ -79,6 +81,7 @@
     gnomeExtensions.caffeine
     gnomeExtensions.extension-list
     gnomeExtensions.appindicator
+    gnome.nautilus-python
     vlc
     vscode
     gh
@@ -99,7 +102,7 @@
   };
 
   # Enable CUPS to print documents.
-  # services.printing.enable = true;
+  services.printing.enable = true;
 
   # Enable sound.
   # sound.enable = true;
